@@ -937,11 +937,11 @@ class Component extends DCLogic {
   // ============================================================
   CONFIG = {
     // --- BREVO (raccolta + invio email) ---------------------------------
-    // Crea un account su https://www.brevo.com  →  Contatti  →  Moduli
-    // →  crea un modulo  →  copia l'URL che trovi in <form action="...">.
-    // Di solito è tipo: https://sibforms.com/serve/MUIF...
     BREVO_FORM_ACTION: 'https://c8fc8661.sibforms.com/serve/MUIFAB5X_A73au8kq1yZZ3jSf-Eeohm86zSL44VD58_icnFPPhyQW9QINVmKo1_7DwwgQnLVJpEzhdtfTC1HAtVl6G4Y7eoehBrT1zRC9-amOXacRpzjIUAn_fTwZCV86VH-m-v6e3hTEe4_7ybAmSTuT8cjD8EorSx7GqD8TvAfq7HmRx7slrk0aFSZAx8QSpaMDxjpmc0Jpvw2KQ==',
-    BREVO_EMAIL_FIELD: 'EMAIL',     // nome del campo email nel modulo Brevo
+    BREVO_EMAIL_FIELD: 'EMAIL',
+    BREVO_API_KEY: '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',
+    BREVO_SENDER_EMAIL: 'elettravaleri@gmail.com',
+    BREVO_SENDER_NAME: 'Elettra Valeri · Abitudini Infelici',
 
     // --- SUPABASE (profili + salvataggi multi-dispositivo) --------------
     // Crea un progetto su https://supabase.com  →  Project Settings  →  API.
@@ -1279,7 +1279,8 @@ class Component extends DCLogic {
     e.preventDefault();
     const email = this.state.email;
     this.sendToBrevo(email, this.state.result, 'test');
-    // Dalla schermata mail (gate) o dal form mail in home si va diretti al test; dalla pagina risultato si resta lì.
+    // Se l'utente ha già un risultato (es. era sulla pagina risultato), manda subito l'email di riepilogo.
+    if (this.state.result) this.sendResultEmail(email, this.state.result, this.state.profile);
     const toTest = this.state.screen === 'gate' || this.state.screen === 'landing';
     this.setState(toTest ? { leadDone:true, screen:'test', qi:0 } : { leadDone:true });
     this.persist({ leadDone:true, email });
@@ -1302,6 +1303,66 @@ class Component extends DCLogic {
       body.append('locale', 'it');
       fetch(action, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
     } catch (err) {}
+  }
+
+  sendResultEmail(email, patternKey, nome) {
+    const apiKey = this.CONFIG.BREVO_API_KEY;
+    if (!apiKey || !email || !patternKey) return;
+    const p = this.patternByKey(patternKey);
+    if (!p) return;
+    const saluto = nome ? `Ciao ${nome},` : 'Ciao,';
+    const appUrl = window.location.origin + window.location.pathname;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F4ECE1;font-family:'Helvetica Neue',Arial,sans-serif">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px">
+  <div style="text-align:center;margin-bottom:28px">
+    <span style="font-size:11px;letter-spacing:0.18em;color:#A65535;font-weight:700">ABITUDINI INFELICI · AREA RESET</span>
+  </div>
+  <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(74,47,59,0.12)">
+    <div style="background:#4A2F3B;padding:32px 32px 28px;text-align:center">
+      <div style="font-size:12px;letter-spacing:0.14em;color:#E8C8B8;font-weight:700;margin-bottom:10px">IL TUO RISULTATO</div>
+      <div style="font-size:32px;line-height:1.1;color:#F4E6DC;font-style:italic;font-family:Georgia,serif">${p.profile}</div>
+      <div style="font-size:14px;color:#C9B8A8;margin-top:8px">${p.pattern}</div>
+    </div>
+    <div style="padding:32px">
+      <p style="font-size:16px;line-height:1.6;color:#2C201B;margin:0 0 20px">${saluto}</p>
+      <p style="font-size:16px;line-height:1.6;color:#4a3a32;margin:0 0 20px">grazie per aver fatto il test. Il loop mentale che si attiva più spesso in te è quello di <strong>${p.profile}</strong>. Non è un'etichetta: è un circuito che, una volta visto, puoi cambiare.</p>
+      <div style="background:#F7E8DF;border-radius:12px;padding:20px;margin:0 0 20px">
+        <div style="font-size:10px;letter-spacing:0.14em;color:#A65535;font-weight:700;margin-bottom:8px">IL TUO PENSIERO RICORRENTE</div>
+        <div style="font-size:18px;line-height:1.4;color:#2C201B;font-style:italic;font-family:Georgia,serif">«${p.frase}»</div>
+      </div>
+      <p style="font-size:15px;line-height:1.6;color:#4a3a32;margin:0 0 6px">${p.desc}</p>
+      <div style="background:#F4ECE1;border-radius:12px;padding:20px;margin:20px 0">
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;letter-spacing:0.12em;color:#8E9C7C;font-weight:700;margin-bottom:4px">TRIGGER PIÙ PROBABILE</div>
+          <div style="font-size:15px;color:#3a2c25;line-height:1.5">${p.trigger}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:0.12em;color:#8E9C7C;font-weight:700;margin-bottom:4px">LA TUA PRIMA MICRO-AZIONE</div>
+          <div style="font-size:15px;color:#3a2c25;line-height:1.5">${p.primoPasso}</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin:28px 0 8px">
+        <a href="${appUrl}" style="display:inline-block;background:#C06B45;color:#FBF6EF;font-weight:700;font-size:15px;padding:15px 30px;border-radius:100px;text-decoration:none">Accedi all'Area Reset →</a>
+      </div>
+    </div>
+    <div style="padding:20px 32px;border-top:1px solid #EEE7DC">
+      <p style="font-size:12px;color:#b9ab9d;line-height:1.6;margin:0">Ricevi questa email perché hai fatto il test su Abitudini Infelici. Puoi disiscriverti quando vuoi rispondendo a questa email.</p>
+    </div>
+  </div>
+  <p style="text-align:center;font-size:12px;color:#a89a8b;margin:20px 0 0">Elettra Valeri · Abitudini Infelici</p>
+</div>
+</body></html>`;
+    fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: { name: this.CONFIG.BREVO_SENDER_NAME, email: this.CONFIG.BREVO_SENDER_EMAIL },
+        to: [{ email }],
+        subject: `Il tuo risultato: sei ${p.profile}`,
+        htmlContent: html,
+      }),
+    }).catch(() => {});
   }
 
   patternByKey(k){ return this.PATTERNS.find(p=>p.key===k); }
@@ -1392,6 +1453,7 @@ class Component extends DCLogic {
       // Se l'utente ha già lasciato l'email (test gratuito), aggiorna il suo contatto Brevo col pattern risultante.
       if (this.state.leadDone && this.state.email) {
         this.sendToBrevo(this.state.email, best, this.state.profile ? 'libro' : 'test', this.state.profile);
+        this.sendResultEmail(this.state.email, best, this.state.profile);
       }
       window.scrollTo(0,0);
     } else {
