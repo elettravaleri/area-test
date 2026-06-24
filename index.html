@@ -1253,7 +1253,9 @@ class Component extends DCLogic {
       .catch(() => { this.setState({ authorErr: true, authorStatsLoading: false }); });
   };
   loadAuthorStats(token) {
-    const headers = this.cloudHeaders(token ? { Authorization: 'Bearer ' + token } : {});
+    // Usa la chiave anon (non il JWT dell'autrice) per leggere tutte le righe della tabella.
+    // Il JWT di Supabase Auth è soggetto a RLS e legge solo la riga dell'utente autenticato.
+    const headers = this.cloudHeaders();
     fetch(this.cloudUrl('?select=data'), { headers })
       .then(r => {
         if (!r.ok) return Promise.reject(new Error('rls_' + r.status));
