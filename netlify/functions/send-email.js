@@ -1,3 +1,5 @@
+const nodemailer = require('nodemailer');
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -56,29 +58,29 @@ exports.handler = async (event) => {
 </body></html>`;
 
   try {
-    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        'api-key': process.env.BREVO_API_KEY,
-        'Content-Type': 'application/json',
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
       },
-      body: JSON.stringify({
-        sender: { name: 'Elettra Valeri · Abitudini Infelici', email: process.env.BREVO_SENDER_EMAIL },
-        to: [{ email }],
-        subject: `Il tuo risultato: sei ${profile}`,
-        htmlContent,
-      }),
     });
 
-    const data = await res.json().catch(() => ({}));
-    console.log('Brevo status:', res.status, 'to:', email, 'response:', JSON.stringify(data));
+    const info = await transporter.sendMail({
+      from: `"Elettra Valeri · Abitudini Infelici" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: `Il tuo risultato: sei ${profile}`,
+      html: htmlContent,
+    });
+
+    console.log('Gmail sent:', info.messageId, 'to:', email);
     return {
-      statusCode: res.ok ? 200 : res.status,
+      statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ok: res.ok, ...data }),
+      body: JSON.stringify({ ok: true, messageId: info.messageId }),
     };
   } catch (err) {
-    console.error('fetch error:', err.message);
+    console.error('Gmail error:', err.message);
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
