@@ -439,6 +439,26 @@
           <p style="font-size:14px;color:#A65535;margin:14px 0 0">Codice non valido. Controlla la pagina dei bonus nel libro.</p>
         </sc-if>
         <p style="font-size:13px;color:#9a8d80;margin:22px 0 0">Non hai ancora il libro? <button onClick="{{ goLanding }}" style="cursor:pointer;border:none;background:transparent;color:#A65535;font-family:inherit;font-weight:700;font-size:13px;text-decoration:underline;padding:0">Torna alla home</button></p>
+        <div style="margin-top:28px;padding-top:24px;border-top:1px solid #E4D8C9">
+          <sc-if value="{{ loginModeOff }}">
+            <p style="font-size:14px;color:#9a8d80;margin:0">Sei già registrata? <button onClick="{{ toggleLoginMode }}" style="cursor:pointer;border:none;background:transparent;color:#C06B45;font-family:inherit;font-weight:700;font-size:14px;padding:0">Accedi con la tua email →</button></p>
+          </sc-if>
+          <sc-if value="{{ loginMode }}">
+            <p style="font-size:15px;font-weight:600;color:#2C201B;margin:0 0 6px">Bentornata!</p>
+            <p style="font-size:14px;color:#6F6157;margin:0 0 16px">Inserisci la tua email e recuperiamo subito il tuo profilo.</p>
+            <form onSubmit="{{ submitLoginEmail }}" style="display:flex;flex-direction:column;gap:10px;max-width:340px;margin:0 auto">
+              <input value="{{ loginEmail }}" onInput="{{ onLoginEmail }}" type="email" required autocomplete="email" placeholder="La tua email" style="border:1px solid #E4D8C9;background:#fff;color:#2C201B;font-family:inherit;font-size:16px;text-align:center;padding:14px 18px;border-radius:14px;outline:none"/>
+              <button type="submit" style="border:none;cursor:pointer;background:#C06B45;color:#FBF6EF;font-family:inherit;font-weight:700;font-size:16px;padding:14px;border-radius:14px">{{ loginBtnLabel }}</button>
+            </form>
+            <sc-if value="{{ loginEmailNotFound }}">
+              <p style="font-size:13px;color:#A65535;margin:12px 0 0">Nessun profilo trovato con questa email. Hai il codice del libro? <button onClick="{{ toggleLoginMode }}" style="cursor:pointer;border:none;background:transparent;color:#A65535;font-family:inherit;font-weight:700;font-size:13px;padding:0;text-decoration:underline">Inserisci il codice →</button></p>
+            </sc-if>
+            <sc-if value="{{ loginEmailError }}">
+              <p style="font-size:13px;color:#A65535;margin:12px 0 0">Errore di connessione. Riprova tra qualche secondo.</p>
+            </sc-if>
+            <button onClick="{{ toggleLoginMode }}" style="cursor:pointer;border:none;background:transparent;color:#9a8d80;font-family:inherit;font-size:13px;margin-top:14px;text-decoration:underline;padding:0">← Ho il codice del libro</button>
+          </sc-if>
+        </div>
       </sc-if>
       <sc-if value="{{ needName }}">
         <div style="width:76px;height:76px;margin:0 auto 22px;border-radius:50%;background:radial-gradient(circle,#EBEFE3,#DCE3D0);display:grid;place-items:center;font-size:32px;color:#6F7D5E">✓</div>
@@ -877,6 +897,7 @@ class Component extends DCLogic {
     planDone: {}, libPattern: 'tutti', sosStep: 0,
     codeOk: false, codeInput: '', codeError: false, profile: '', nameInput: '',
     emailView: 'result', setupDismissed: false,
+    loginMode: false, loginEmail: '', loginEmailErr: null, loginLoading: false,
     authorOk: false, authorPwInput: '', authorErr: false,
     authorEmail: '', authorToken: null,
     authorStats: null, authorStatsLoading: false,
@@ -1098,12 +1119,64 @@ class Component extends DCLogic {
     const n = (this.state.nameInput || '').trim();
     const em = (this.state.email || '').trim();
     if (!n || !em) return;
-    this.setState({ profile:n, email:em, leadDone:true, screen:'area' });
-    this.persist({ profile:n, email:em, codeOk:true, leadDone:true });
-    this.sendToBrevo(em, this.state.result, 'libro', n);   // cliente con codice → in lista Brevo (con nome)
-    this.cloudLoad(em);   // recupera eventuali progressi già salvati per questa email
-    window.scrollTo(0,0);
+    // Prima controlla se quell'email ha già un profilo salvato.
+    if (this.cloudOn) {
+      const url = this.cloudUrl('?email=eq.' + encodeURIComponent(em) + '&select=data');
+      fetch(url, { headers: this.cloudHeaders() })
+        .then(r => r.ok ? r.json() : [])
+        .then(rows => {
+          const existing = rows && rows[0] && rows[0].data;
+          if (existing && existing.profile) {
+            // Email già registrata: carica il profilo esistente, ignora il nuovo nome.
+            this.setState(st => ({ ...st, ...existing, screen:'area', returning: true }));
+            try { localStorage.setItem('areaReset_v1', JSON.stringify(existing)); } catch(e) {}
+          } else {
+            // Nuova registrazione.
+            this.setState({ profile:n, email:em, leadDone:true, screen:'area' });
+            this.persist({ profile:n, email:em, codeOk:true, leadDone:true });
+            this.sendToBrevo(em, this.state.result, 'libro', n);
+          }
+          window.scrollTo(0,0);
+        })
+        .catch(() => {
+          // Fallback: procedi normalmente anche se il check fallisce.
+          this.setState({ profile:n, email:em, leadDone:true, screen:'area' });
+          this.persist({ profile:n, email:em, codeOk:true, leadDone:true });
+          this.sendToBrevo(em, this.state.result, 'libro', n);
+          window.scrollTo(0,0);
+        });
+    } else {
+      this.setState({ profile:n, email:em, leadDone:true, screen:'area' });
+      this.persist({ profile:n, email:em, codeOk:true, leadDone:true });
+      this.sendToBrevo(em, this.state.result, 'libro', n);
+      window.scrollTo(0,0);
+    }
   };
+
+  // Login diretto via email per utenti già registrati (senza codice libro).
+  onLoginEmail = (e) => this.setState({ loginEmail: e.target.value, loginEmailErr: null });
+  toggleLoginMode = () => this.setState(s => ({ loginMode: !s.loginMode, loginEmailErr: null, loginLoading: false }));
+  submitLoginEmail = (e) => {
+    e.preventDefault();
+    const em = (this.state.loginEmail || '').trim();
+    if (!em) return;
+    this.setState({ loginLoading: true, loginEmailErr: null });
+    const url = this.cloudUrl('?email=eq.' + encodeURIComponent(em) + '&select=data');
+    fetch(url, { headers: this.cloudHeaders() })
+      .then(r => r.ok ? r.json() : [])
+      .then(rows => {
+        const data = rows && rows[0] && rows[0].data;
+        if (data && data.profile && data.codeOk) {
+          this.setState(st => ({ ...st, ...data, screen:'area', loginMode:false, loginLoading:false }));
+          try { localStorage.setItem('areaReset_v1', JSON.stringify(data)); } catch(e) {}
+          window.scrollTo(0,0);
+        } else {
+          this.setState({ loginEmailErr: 'notfound', loginLoading: false });
+        }
+      })
+      .catch(() => { this.setState({ loginEmailErr: 'error', loginLoading: false }); });
+  };
+
   // Logout completo: azzera la sessione personale (codice, profilo, progressi) e va dove indicato.
   resetSession(toScreen) {
     const fresh = { codeOk:false, codeInput:'', codeError:false, profile:'', nameInput:'',
@@ -1377,6 +1450,11 @@ class Component extends DCLogic {
       hasProfile: !!s.profile, profileName: s.profile, profileEmail: s.email,
       switchUser: this.switchUser, logout: this.logout,
       returning: !!s.returning, dismissReturning: this.dismissReturning,
+      loginMode: !!s.loginMode, loginModeOff: !s.loginMode,
+      loginEmail: s.loginEmail, onLoginEmail: this.onLoginEmail,
+      toggleLoginMode: this.toggleLoginMode, submitLoginEmail: this.submitLoginEmail,
+      loginEmailNotFound: s.loginEmailErr === 'notfound', loginEmailError: s.loginEmailErr === 'error',
+      loginBtnLabel: s.loginLoading ? 'Caricamento…' : 'Entra nel mio profilo →',
 
       isPrivacy: screen==='privacy', isEmail: screen==='email', isStampabili: screen==='stampabili', isAutrice: screen==='autrice',
       goPrivacy: this.goPrivacy, goStampabili: this.goStampabili, goAutrice: this.goAutrice,
