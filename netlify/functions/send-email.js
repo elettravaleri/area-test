@@ -71,12 +71,14 @@ exports.handler = async (event) => {
     });
 
     const data = await res.json().catch(() => ({}));
+    console.log('Brevo status:', res.status, 'to:', email, 'response:', JSON.stringify(data));
     return {
       statusCode: res.ok ? 200 : res.status,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ok: res.ok, ...data }),
     };
   } catch (err) {
+    console.error('fetch error:', err.message);
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
