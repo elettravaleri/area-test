@@ -19,6 +19,15 @@
   @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
   @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .nav-links{display:flex;align-items:center;gap:28px}
+  .nav-burger{display:none;background:none;border:none;cursor:pointer;padding:6px;color:#2C201B;line-height:1}
+  .nav-overlay{display:none;position:fixed;inset:0;z-index:50;background:rgba(44,32,27,0.45)}
+  .nav-overlay.open{display:block}
+  .nav-panel{position:absolute;top:0;right:0;width:min(290px,85vw);height:100%;background:#F4ECE1;padding:28px 24px;display:flex;flex-direction:column;gap:4px;box-shadow:-8px 0 32px rgba(44,32,27,0.12)}
+  @media(max-width:680px){
+    .nav-links{display:none}
+    .nav-burger{display:flex;align-items:center;justify-content:center}
+  }
 </style>
 </helmet>
 
@@ -41,18 +50,35 @@
   </div>
   </sc-if>
   <!-- NAV -->
+  <!-- Mobile menu overlay -->
+  <div class="nav-overlay {{ menuOpenClass }}" onClick="{{ closeMenu }}">
+    <div class="nav-panel" onClick="{{ stopProp }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
+        <span style="font-family:'Archivo',sans-serif;font-weight:900;font-size:14px;color:#2C201B">MENU</span>
+        <button onClick="{{ closeMenu }}" style="background:none;border:none;cursor:pointer;font-size:22px;color:#6F6157;padding:4px;line-height:1">×</button>
+      </div>
+      <a href="#test" onClick="{{ closeMenu }}" style="font-size:17px;font-weight:600;color:#2C201B;text-decoration:none;padding:14px 0;border-bottom:1px solid #E4D8C9">Il test</a>
+      <a href="#pattern" onClick="{{ closeMenu }}" style="font-size:17px;font-weight:600;color:#2C201B;text-decoration:none;padding:14px 0;border-bottom:1px solid #E4D8C9">I 7 pattern</a>
+      <a href="#libro" onClick="{{ closeMenu }}" style="font-size:17px;font-weight:600;color:#2C201B;text-decoration:none;padding:14px 0;border-bottom:1px solid #E4D8C9">Il libro</a>
+      <button onClick="{{ startTestMenu }}" style="margin-top:20px;border:none;cursor:pointer;background:#C06B45;color:#FBF6EF;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:16px;padding:15px 24px;border-radius:100px;text-align:center">Fai il test</button>
+    </div>
+  </div>
+
   <header style="position:sticky;top:0;z-index:40;backdrop-filter:blur(10px);background:rgba(244,236,225,0.82);border-bottom:1px solid #E4D8C9">
     <div style="max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:24px">
       <div style="display:flex;align-items:baseline;gap:10px;min-width:0">
         <span style="font-family:'Archivo',sans-serif;font-weight:900;letter-spacing:0.02em;font-size:16px;color:#2C201B;white-space:nowrap">ABITUDINI INFELICI</span>
         <span style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#A65535;white-space:nowrap">Area Reset</span>
       </div>
-      <nav style="display:flex;align-items:center;gap:28px">
+      <nav class="nav-links">
         <a href="#test" style="font-size:14px;font-weight:600;color:#6F6157;text-decoration:none">Il test</a>
         <a href="#pattern" style="font-size:14px;font-weight:600;color:#6F6157;text-decoration:none">I 7 pattern</a>
         <a href="#libro" style="font-size:14px;font-weight:600;color:#6F6157;text-decoration:none">Il libro</a>
         <button onClick="{{ startTest }}" style="border:none;cursor:pointer;background:#C06B45;color:#FBF6EF;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:14px;padding:11px 20px;border-radius:100px">Fai il test</button>
       </nav>
+      <button class="nav-burger" onClick="{{ toggleMenu }}" aria-label="Menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
     </div>
   </header>
 
@@ -859,6 +885,7 @@
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:28px">
       <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:clamp(28px,4vw,40px);line-height:1;margin:0;color:#2C201B">Dashboard</h1>
       <span style="font-family:'Archivo',sans-serif;font-size:10px;letter-spacing:0.12em;font-weight:700;color:#A65535;background:#F7E8DF;padding:6px 12px;border-radius:100px">{{ statsLabel }}</span>
+      <button onClick="{{ refreshStats }}" style="margin-left:auto;border:1px solid #E4D8C9;background:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:#6F6157;padding:7px 14px;border-radius:100px">↻ Aggiorna</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:36px">
       <div style="background:#FBF6EF;border:1px solid #EADfc9;border-radius:16px;padding:22px"><div style="font-family:'Archivo',sans-serif;font-size:10px;letter-spacing:0.1em;color:#9a8d80;font-weight:700;margin-bottom:8px">TEST COMPLETATI</div><div style="font-family:'Newsreader',serif;font-size:38px;color:#2C201B;line-height:1">{{ statsTests }}</div></div>
@@ -897,6 +924,7 @@ class Component extends DCLogic {
     planDone: {}, libPattern: 'tutti', sosStep: 0,
     codeOk: false, codeInput: '', codeError: false, profile: '', nameInput: '',
     emailView: 'result', setupDismissed: false,
+    menuOpen: false,
     loginMode: false, loginEmail: '', loginEmailErr: null, loginLoading: false,
     authorOk: false, authorPwInput: '', authorErr: false,
     authorEmail: '', authorToken: null,
@@ -1190,6 +1218,17 @@ class Component extends DCLogic {
   switchUser = () => this.resetSession('unlock');       // Cambia utente → schermata codice per un altro accesso
   dismissReturning = () => this.setState({ returning:false });
 
+  toggleMenu = () => this.setState(s => ({ menuOpen: !s.menuOpen }));
+  closeMenu = () => this.setState({ menuOpen: false });
+  startTestMenu = () => { this.closeMenu(); this.startTest(); };
+  stopProp = (e) => e.stopPropagation();
+
+  refreshStats = () => {
+    if (!this.state.authorToken) return;
+    this.setState({ authorStatsLoading: true });
+    this.loadAuthorStats(this.state.authorToken);
+  };
+
   goPrivacy = () => { this.go('privacy'); };
   goStampabili = () => { this.go('stampabili'); };
   goAutrice = () => { this.go('autrice'); };
@@ -1216,7 +1255,10 @@ class Component extends DCLogic {
   loadAuthorStats(token) {
     const headers = this.cloudHeaders(token ? { Authorization: 'Bearer ' + token } : {});
     fetch(this.cloudUrl('?select=data'), { headers })
-      .then(r => r.ok ? r.json() : [])
+      .then(r => {
+        if (!r.ok) return Promise.reject(new Error('rls_' + r.status));
+        return r.json();
+      })
       .then(rows => {
         const total = rows.length;
         const withResult = rows.filter(r => r.data && r.data.result).length;
@@ -1224,9 +1266,9 @@ class Component extends DCLogic {
         const rate = total > 0 ? Math.round(withResult / total * 100) : 0;
         const patternCounts = {};
         rows.forEach(r => { if (r.data && r.data.result) patternCounts[r.data.result] = (patternCounts[r.data.result] || 0) + 1; });
-        this.setState({ authorStats: { total, withResult, withCode, rate, patternCounts }, authorStatsLoading: false });
+        this.setState({ authorStats: { total, withResult, withCode, rate, patternCounts }, authorStatsLoading: false, authorStatsErr: null });
       })
-      .catch(() => { this.setState({ authorStatsLoading: false }); });
+      .catch(err => { this.setState({ authorStatsLoading: false, authorStatsErr: (err && err.message) || 'error' }); });
   }
   goEmail = (v) => () => { this.setState({ screen:'email', emailView: v || 'result' }); window.scrollTo(0,0); };
 
@@ -1420,7 +1462,8 @@ class Component extends DCLogic {
     const statsEmails = statsLoading ? '…' : (authorStats ? String(authorStats.total) : '—');
     const statsRate = statsLoading ? '…' : (authorStats ? authorStats.rate + '%' : '—');
     const statsCodes = statsLoading ? '…' : (authorStats ? String(authorStats.withCode) : '—');
-    const statsLabel = statsLoading ? 'Caricamento…' : (authorStats ? 'DATI REALI · Supabase' : 'DATI NON DISPONIBILI');
+    const statsErr = s.authorStatsErr;
+    const statsLabel = statsLoading ? 'Caricamento…' : statsErr ? ('ERRORE · ' + (statsErr.includes('rls_403') ? 'Controlla RLS Supabase' : statsErr)) : (authorStats ? 'DATI REALI · Supabase' : 'DATI NON DISPONIBILI');
     const statPct = { rimuginio:24, approvazione:19, confronto:16, conformismo:14, pessimismo:11, posticipare:9, identita:7 };
     let patternStats;
     if (authorStats && authorStats.patternCounts && Object.keys(authorStats.patternCounts).length > 0) {
@@ -1450,6 +1493,9 @@ class Component extends DCLogic {
       hasProfile: !!s.profile, profileName: s.profile, profileEmail: s.email,
       switchUser: this.switchUser, logout: this.logout,
       returning: !!s.returning, dismissReturning: this.dismissReturning,
+      menuOpenClass: s.menuOpen ? 'open' : '', toggleMenu: this.toggleMenu, closeMenu: this.closeMenu,
+      startTestMenu: this.startTestMenu, stopProp: this.stopProp,
+      refreshStats: this.refreshStats,
       loginMode: !!s.loginMode, loginModeOff: !s.loginMode,
       loginEmail: s.loginEmail, onLoginEmail: this.onLoginEmail,
       toggleLoginMode: this.toggleLoginMode, submitLoginEmail: this.submitLoginEmail,
