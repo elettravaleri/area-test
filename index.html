@@ -74,7 +74,7 @@
         <a href="#test" style="font-size:14px;font-weight:600;color:#6F6157;text-decoration:none">Il test</a>
         <a href="#pattern" style="font-size:14px;font-weight:600;color:#6F6157;text-decoration:none">I 7 pattern</a>
         <a href="#libro" style="font-size:14px;font-weight:600;color:#6F6157;text-decoration:none">Il libro</a>
-        <a href="https://www.amazon.it" target="_blank" rel="noopener" style="font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:14px;padding:11px 20px;border-radius:100px;border:1.5px solid #C06B45;color:#C06B45;text-decoration:none">Acquista il libro</a>
+        <a href="https://amzn.eu/d/0jfRBoGt" target="_blank" rel="noopener" style="font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:14px;padding:11px 20px;border-radius:100px;border:1.5px solid #C06B45;color:#C06B45;text-decoration:none">Acquista il libro</a>
         <button onClick="{{ startTest }}" style="border:none;cursor:pointer;background:#C06B45;color:#FBF6EF;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:14px;padding:11px 20px;border-radius:100px">Fai il test</button>
       </nav>
       <button class="nav-burger" onClick="{{ toggleMenu }}" aria-label="Menu">
@@ -946,7 +946,7 @@ class Component extends DCLogic {
     SUPABASE_TABLE: 'profili',      // nome della tabella su Supabase
 
     // --- LINK AL LIBRO (incollalo quando esce; vuoto = mostra "Presto su Amazon") -
-    BOOK_URL: 'https://www.amazon.it',
+    BOOK_URL: 'https://amzn.eu/d/0jfRBoGt',
 
     // --- ACCESSO AUTRICE (via Supabase Auth — nessuna password qui) -----
     // Vai su Supabase → Authentication → Users → Add user
