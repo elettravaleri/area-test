@@ -1491,7 +1491,7 @@ class Component extends DCLogic {
         return { profile: p.profile, tint: p.tint, pct: pct + '%', count };
       }).sort((a,b) => b.count - a.count);
     } else {
-      patternStats = this.PATTERNS.map(p=>({ profile:p.profile, tint:p.tint, pct: statPct[p.key]+'%', count: Math.round(1284*statPct[p.key]/100) })).sort((a,b)=>parseInt(b.pct)-parseInt(a.pct));
+      patternStats = this.PATTERNS.map(p=>({ profile:p.profile, tint:p.tint, pct:'0%', count:0 }));
     }
     const emailRp = rp || this.PATTERNS.find(p=>p.key==='approvazione');
 
